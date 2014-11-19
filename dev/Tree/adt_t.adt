@@ -1,0 +1,22 @@
+data tree{
+	Empty();
+    leaf(int);
+    node(tree, tree);
+}
+
+data details{
+     record(char*, int, char*, float);
+}
+
+data Expr{
+	Var(char*);
+	Num(int);
+	Binop(Expr, Expr);
+	Unop(Expr);
+}
+
+data Stat{
+	Assign(Expr, Expr);
+	Return(Expr);
+	ITE(Expr, Stat, Stat);
+}

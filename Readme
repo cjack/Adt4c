@@ -1,0 +1,22 @@
+Copyright (c) 2014 Yi Lin, Lee Naish and Peter Schachte
+
+Initial design and prototype implementation by Lee Naish
+Initial C implementation by Yi Lin
+Additional supervision/contributions by Peter Schachte
+
+Environment Requirement(Basic):
+1. Gcc version 4.0.0
+2. Bison version 2.4.2
+4. Flex version 2.5.35
+5. Make 3.81
+
+directory structure:
+
+src/
+C/flex/bison source code etc
+
+doc/
+various documentation
+
+/dev
+Development/design notes and ideas, early prototype, etc

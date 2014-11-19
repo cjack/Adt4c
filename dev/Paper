@@ -1,0 +1,46 @@
+Motivations:
+
+1) ADT benefits (flexibility wrt representing precisely what we want)
+for C.
+
+2) Support for polymorphic types (plus their instances) and functions
+over these types, with type safety checked at compile time.
+
+3) Adapt features of declarative languages which avoid certain classes
+of errors which can be made with C etc (eg, dereference NULL pointers,
+referencing inappropriate members of unions (uninitialized etc),
+inappropriate casts,...
+
+4) C-style efficiency (use efficient ADT representations developed
+for implementation of declarative languages, explicit memory magement,
+switch, use of pointers etc).
+
+5) Sharing non-trivial user-defined data types across language boundaries.
+
+6) Lightweight implementation: rely on CPP/cc for all compilation,
+static checking etc (more of a constraint than a motivation).
+
+ADTs
+eg tree, tree234
+
+Representation
+structs and unions
+Efficient representations
+ tagged ptrs
+ constants
+ tree rep = std C rep
+
+Primitives
+ types exposed
+ Con - avoid un-init fields, wrong tags etc
+ free_T
+ switch_T - limit scope
+  switch_T_ptr, if_Cons, ...
+
+Polymorphism
+Type "variables"
+Declaring instances
+...
+
+Type checking + other details
+ local vars

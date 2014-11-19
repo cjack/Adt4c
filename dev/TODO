@@ -1,0 +1,17 @@
+Design
+	clarify polymorphism details
+	consider modules?
+
+Implementation
+	see todo list in code
+	(refactor/rewrite code, read defns etc from file,...)
+
+Write up etc
+	understand adt tool better
+	literature survey
+	compare with other languages
+
+Possible extensions
+	similar additions to other languages (C++?)
+	interface to Mercury
+	design/implementation of declarative/imperative language

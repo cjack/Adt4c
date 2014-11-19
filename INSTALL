@@ -1,0 +1,5 @@
+INSTALL
+
+1. unzip the archive file, go into "src" directory
+2. type "make"
+2. type "make install"

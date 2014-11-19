@@ -1,0 +1,50 @@
+data Test1{
+     con_1();
+     con_2();
+     con_3();
+     con_4();
+     con_5();
+     con_6();
+     con_7();
+     con_8();
+     con_9();
+     con_10();
+     con_11();
+     con_12();
+}
+data Test2{
+     non_con_1(int);
+}
+data Test3{
+     nil();
+     non_con(int);
+}
+data Test4{
+     con1();
+     con2();
+     con3();
+     con4();
+     non_1(int);
+     non_2(int);
+     non_3(int);
+     non_4(int);
+     non_5(int);
+     non_6(int);
+     non_7(int);
+     non_8(int);
+}
+data Test{
+     const_1();
+     const_2();
+     const_3();
+     const_4();
+     non_const_1(int, char, long, double);
+     non_const_2(int, char, long);
+     non_const_3(int, char);
+     non_const_4(int);
+     non_const_5(int, char, long, double);
+     non_const_6(int);
+     non_const_7(int);
+     non_const_8(int);
+     non_const_9(int);
+}

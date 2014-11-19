@@ -1,0 +1,13 @@
+http://eprints.eemcs.utwente.nl/17771/
+
+https://github.com/Mercury-Language/mercury/blob/master/library/tree234.m?source=cc
+Note structure of insertion code is a bit different (our Haskell version
+gives more concise code I think).  tree234.m is used by set_tree234.m -
+not sure how much that is used (check with zs).  Could try specialising
+leaves in the Mercury code and compare performance etc.
+
+http://www.mercurylang.org/information/doc-latest/reference_manual.pdf
+:- pragma type_spec(Pred, Subst).
+suggests polymorphic code be specialised.  With our suggestion for C we
+have to do this for each instance used, and we need to provide separate names
+- its not just an optional hint with new names hidden inside the compiler.

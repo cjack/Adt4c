@@ -1,0 +1,532 @@
+Notes for design of ADT support for C (some stuff here is a bit
+out of date, especialy earlier stuff).
+
+Use cord as example (covers pretty much all the cases we need?):
+
+:- type cord(T)
+    --->    nil
+    ;       leaf(datum::T)
+    ;       branch(left::cord(T), right::cord(T)).
+
+See cord1.c for basic unoptimised version
+
+Hmm, do we need field names?  Basic interface doesn't use them.
+See if/case notes
+
+Can be useful to create 'static' version of constructor, with ptrs to
+args, so memory can be reused without malloc/free. eg
+
+#define declare_branch_ptr(bvar, lptr, rptr) ...
+#define declare_branch_ptr_init(bvar, lptr, initl, rptr, initr) ...
+
+
+should add this to cord1.c
+
+Do we want non-ptr versions of above?  Ptr version more general + if we
+have to do our own memory layout in some cases we can't have a C var at
+an address of our choosing.  Is initialisation going to cause problems -
+should be ok.  We can have init version without vars for fields:
+
+#define declare_branch_init(bvar, initl, initr) ...
+
+---------------------------------------------
+Summary of primitives (macros/functions) needed (use cord and leaf as
+generic examples):
+
+typedef ... cord or cord_arg(cord_v) and declare_cord(cord_v)
+declare_leaf(cord_v) ?
+declare_leaf_init(cord_v, int) (delete "_init"?)
+declare_leaf_ptr(cord_v, intptr_v) ?
+declare_leaf_ptr_init(cord_v, intptr_v, int) (delete "_init"?)
+cord malloc_leaf(int)
+cord malloc_leaf_ptr(int **, int) (don't bother?)
+free_cord(cord)
+switch_cord(........)
+if_leaf_else(cord, int_v, s1, s2)
+if_leaf(cord, int_v, s1)
+if_leaf_ptr_else(cord, intptr_v, s1, s2)
+if_leaf_ptr(cord, intptr_v, s1)
+
+Could try to distinguish uninitialized and initialized versions (former
+with nastier name).  Idea is that if former is avoided we don't have
+uninitialized data errors (may need additional assumptions re pointers).
+One annoyance is C uses similar syntax for declaring arguments (which
+are init) and other variables (which are not).  If we export a type
+and allow arg syntax to be nice then we can't avoid uninit vars.  Could
+have cord_arg(cord_v) in arguments but its ugly.  For init version we
+have declaring arguments plus:
+
+cord malloc_leaf(int)
+cord malloc_leaf_ptr(int **, int) ?
+declare_cord(cord_v, cord)
+declare_leaf(cord_v, int)
+declare_leaf_ptr(cord_v, intptr_v, int)
+
+For others we have
+
+cord malloc_leaf_NOINIT()
+cord malloc_leaf_ptr_NOINIT(int **) ?
+declare_cord_NOINIT(cord_v)
+declare_leaf_NOINIT(cord_v)
+declare_leaf_ptr_NOINIT(cord_v, intptr_v)
+
+Hmm, maybe its not worth being too picky with this - it is C after all!
+We can just state that declaring non-arg cords is unsafe in this
+respect.
+
+=============================================================
+
+Overall design (simple version)
+see adt4c.m prototype
+
+Start with possibly polymorphic types
+- initially skip
+
+Get (finite number of) monomorphic types
+
+Design representation (dependent on #tag bits etc)
+- initially assume enough tag bits for all fields
+and dont optimise zero-arity constructors
+
+Spit out .h and .c files
+
+============================================================
+
+Tags etc.
+---------
+(How is it done in Mercury/ML/... and where is it documented?)
+
+For zero-arity constructors, use small ints.  Check return value of
+malloc is > max number of constructors allowed (default is 64K, say)
+and, if so, try again (+ print warning to stderr the first time it
+happens or set flag etc and have fn to get at this info).  At worst
+we waste a bit of malloced space.
+Two options:
+1) Allocate 0 tag for all constants. First check tag; if zero then we
+can look at rest of word to find out constructor (eg word&maxtag>>ntagbits
++ maxtag), otherwise tag gives constructor.  Used in Mercury++, possibly
+best though more of address space is used by constants and we lose one
+tag value.
+2) First test range of ptr; if smaller than minptr use value, otherwise
+use tag (eg word&maxtag+numconsts (and do subtraction before dereferencing
+etc).  Uses less address space for constants, best for enumerated types,
+but when there are constructors of arity >0 the most common case
+(non-constants) generally needs an extra test and its the less common
+cases of constants that is made slightly simpler.
+
+For non-zero-arity constructors we need pointers.  If there is a single
+one we need zero tag bits (if this is the only constructor we might be
+able to optimise things further, eg if the args fit into a word).  In
+general, with T tag bits we can have 2^T different constructors
+represented by tagged pointers to structs which hold the args.
+
+If there are more non-zero-arity constructors we have a few options.
+
+1) Use 2^T-1 tags for different constructors and the last tag for all
+the others which could be put together with a tagged union (may waste
+lots of space if sizes vary lots - could try to group constructors of
+different sizes) or 2) we could use separate structs with a tag field if we
+can make sure the layout is consistent (same offset for first field of
+different structs when that field has same type Std says fields are not
+reordered so this should be fine(?)) or 3) we could use a
+separate struct with tag+ptr (two layers of indirection + extra malloc)
+or essentially have another wrapped up ADT with the rest of the
+constructors (two layers of indirection at least, O(N) overall if we
+have N different constructors), or 4) we could split constructors into 2^T-1
+different groups and handle recursively (O(logN) layers of indirection -
+could do this at top level of data type also, so data type with more
+than 2^T non-zero-arity constructors has multiple indirection in all
+cases - probably best not do this - programmers can put more commonly
+occurring constructors first and have them optimised, the rest can be
+slower and bigger but we can't avoid it).
+
+Or 5) use 2^T-2 constructors with minimal indirection and use the other
+two tag values to split the other constructors into odd and even ones and
+recurse with one more level of indirection - gives O(logN) redirections
+in worst case with bias towards early constructors.  Eg, with 3 tag bits,
+first 6 constructors use one redirection, next 12 use two indirections,
+next 24 use three, etc.  Use this for now (no?? see below, but first use
+2), similar to Mercury etc) - representation uses non-empty
+list of tag values.  If there is only 1 tag bit available everything
+has multiple indirections.
+
+Or 6) implement nullary data constructors as small ints, if there is a
+single >0-arity constructor implement as pointer to struct without tag and
+other cases as std struct-union-struct - not so efficient in general but
+many common cases are fine (enums, lists, trees with NULL leaves, either,
+maybe, ...) and it should be safe C and OK with Boehm GC with no special
+hooks etc (just check GC_malloc returns something which isn't small).
+To support some builtin types, is there any advantage in using union of
+void*+long+float+char[8]+... for all ADTs - need to tweak type checking?
+
+In implementation we want a data type to describe the implementation of
+each constructor of an ADT.
+
+Version for 2) above:
+
+:- type mono_type_imp --->
+	primitive(string) ;  % C types defined elsewhere
+	eqv_type(mono_type_imp) ; % for wrappers like Haskell newtype
+	adt_type_imp(string, tagtest, cons_imps). % tagged ptr to structs/...
+:- type mono_type_imps = list(mono_type_imp).
+:- type tagtest --->
+	small ; % constants only (enum type)
+	eqzero ; % 1 constant, 1 non-const (list, tree etc)
+	tag(int) ; % few constructors (cord etc)
+	tag0_small(int) ; % some of each, 0 tag for constants
+	tag_small(int) ; % some of each, 0 tag for both
+	tag_tag(int, int) ; % lots of constructors (expr etc)
+	tag0_tag_small(int, int). % lots of both
+:- type cons_imp --->
+	small_int(int, int) ;	% constants: cons#, value in word
+	tagged_ptr(int, string) ; % tagged ptr to struct
+	tagged_struct(int, structtagtype, int, string). % tagged ptr to tagged struct
+:- type cons_imps = list(cons_imp).
+:- type structtagtype ---> char | short | int.
+
+eg int instance of following with 2 tag bits
+(slightly different than Mercury since we squeeze in an extra tag by using
+range of small ints - means n4l doesn't need extra tag word, saving some space.)
+:- type t234(KV)
+	% specialised cases for leaves
+	--->	n2l(KV)
+	;	n3l(KV, KV)
+	;	n4l(KV, KV, KV)
+	% general cases
+	;	n2(t234(KV), KV, t234(KV))
+	;	n3(t234(KV), KV, t234(KV), KV, t234(KV))
+	;	n4(t234(KV), KV, t234(KV), KV, t234(KV), KV, t234(KV))
+	% ; e1 ; e2 ; e3; e4 ; e5 % test nullary constructor represent
+ation
+	% empty tree special case
+	;	empty.
+
+adt_type_imp(t234_int,
+	tag0_tag_small(2, int),
+	[tagged_ptr(3, "n2l_s"),
+	tagged_ptr(2, "n3l_s"),
+	tagged_ptr(1, "n4l_s"),
+	tagged_struct(0, char, 4, "n2_s"),
+	tagged_struct(0, char, 5, "n3_s"),
+	tagged_struct(0, char, 6, "n4_s"),
+	small_int(7, 5),
+	small_int(8, 10),
+	small_int(9, 15),
+% ...
+	]
+
+For 5) above:
+
+:- type mono_type_imp --->
+	primitive(string) ;  % C types defined elsewhere
+	eqv_type(mono_type_imp) ; % for wrappers like Haskell newtype
+	adt_type_imp(string, cons_imps). % tagged ptr to structs/...
+:- type mono_type_imps = list(mono_type_imp).
+:- type int = list(int).
+:- type cons_imp --->
+	small_int(int) ;	% for zero arity constructors
+	tagged_ptr(int, string) ; % tagged ptr to struct
+	tagged_indirect(int, mono_type_imps). % tagged ptr to tagged ptr/...
+:- type cons_imps = list(cons_imp).
+
+eg int instance of following with 2 tag bits
+:- type t234(KV)
+	% specialised cases for leaves
+	--->	n2l(KV)
+	;	n3l(KV, KV)
+	;	n4l(KV, KV, KV)
+	% general cases
+	;	n2(t234(KV), KV, t234(KV))
+	;	n3(t234(KV), KV, t234(KV), KV, t234(KV))
+	;	n4(t234(KV), KV, t234(KV), KV, t234(KV), KV, t234(KV))
+	% ; e1 ; e2 ; e3; e4 ; e5 % test nullary constructor represent
+ation
+	% empty tree special case
+	;	empty.
+
+adt_type_imp(t234_int,
+	[tagged_ptr(1, "n2l_s"),
+	tagged_indirect(2, 
+		[adt_type_imp(t234_int_a, tagged_ptr(0, "n3l_s")]),
+	tagged_indirect(3, 
+		[adt_type_imp(t234_int_a, tagged_ptr(0, "n4l_s")]),
+	tagged_indirect(2, 
+		[adt_type_imp(t234_int_a, tagged_ptr(1, "n2_s")]),
+	tagged_indirect(3, 
+		[adt_type_imp(t234_int_a, tagged_ptr(1, "n3_s")]),
+	tagged_indirect(2, 
+		[adt_type_imp(t234_int_a, tagged_ptr(2, "n4_s")]),
+	small_int(1),
+	small_int(2),
+	small_int(3),
+% ...
+	]
+
+n3l could avoid indirection if we don't use zero tag for constants
+	
+
+-----------------------------------------
+Look at Mercury implementation more carefully (tags.m??? in compiler).
+Can use "global objects" rather than tags as well.  --num-tag-bits 3
+breaks on x86_64 (does it use 64bit words - maybe it just uses 32 bits
+in most cases but perhaps allows 64 bit ints when needed...?)  A bit
+hard to figure out from HLC code produced.
+
+Another thing to do it to put hooks into the Mercury compiler to spit
+out C macros etc which are compatible with whatever representation
+Mercury uses for its types (for Mercury-C interoperability).  Could
+potentially have C types incorporated into Mercury types also, with
+limited or no support for Mercury to change them, but allows Mercury to
+pass structs about.
+
+-----------------------------------------
+Could have more specialised malloc family which uses type info + tags to
+determine sizes of blocks to allocate (saves space).
+-----------------------------------------
+Could do version of switch with named fields - same as below but use
+field names for vars and omit args.
+-----------------------------------------
+Done:
+Design for switch.  Could have default case at start always to save
+having apparently unreachable code (may cause problems with some C
+compilers). XXX unreachable code is ok according to std, so allow
+"default_" case (could use case_default/default()/...)  Below uses 
+1) {Cord v=(c); to check v is a Cord,
+2) {Cord tchk=Cord_tchk;} to check all the cases are for Cords
+Otherwise Cord_tchk won't be defined (at top level). So it works with
+nested switches - we redefine Cord_tchk as a char within cases.
+
+#define switch_Cord(c)  \
+	{ Cord Cord_tchk, v=(c); \
+	switch(((_ADTint)(v)&7)) {{{default:
+#define case_Empty() break;}} \
+	case 0: {{Cord tchk=Cord_tchk;}{char Cord_tchk;
+#define case_Leaf(v0) \
+	break;}} case 1: {{Cord tchk=Cord_tchk;}{char Cord_tchk; \
+	int v0=((struct _ADT_Cord_int_Leaf*)((_ADTint)v-1))->f0;
+#define case_Branch(v0,v1) \
+	break;}} case 2: {{Cord tchk=Cord_tchk;}{char Cord_tchk; \
+	struct _ADT_Cord_int* v0=((struct _ADT_Cord_int_Branch*)((_ADTint)v-2))->f0; \
+	struct _ADT_Cord_int* v1=((struct _ADT_Cord_int_Branch*)((_ADTint)v-2))->f1;
+#define end_switch_Cord {Cord tchk=Cord_tchk;}}}
+XXX just use generic end_switch()
+
+Note: this is at odds with C idiom of using {...} and potentially breaks
+IDEs due to funny syntax.  The compromise we can adopt is put () after
+all our macros, whether they are needed or not (eg end_switch) and make
+sure we can add ";" after macro invocation (no problems with our
+design).  This makes all macro calls syntactically the same as function
+calls; hopefully the names plus indentation will alert programmers to
+what they really are (hmm, indentation could be an issue for some IDEs -
+hopefuly not a significant problem).
+
+-----------------------------------------
+Done: if-then-else in a similar way to switch:
+if_Branch(v,v0,v1)
+	...
+else_	// otherwise/Else/orelse/ifnot/
+	...
+endif
+
+#define if_Branch(v,v0,v1) \
+{{Cord_int tchk=_ADT_v;};if (((_ADTint)(_ADT_v)&7)==2) {\
+struct _ADT_Cord_int* v0=((struct _ADT_Cord_int_Branch*)((_ADTint)_ADT_v-2))->f0; \
+struct _ADT_Cord_int* v1=((struct _ADT_Cord_int_Branch*)((_ADTint)_ADT_v-2))->f1;
+#define else_ } else {
+#define endif }}
+
+Done: nice to have elseif_Leaf(v,v0)... to save on multiple
+endifs, if we can manage to do so with braces/scopes/...
+Above uses extra outer { } for type check + avoiding v being
+re-evaluated.  In general an elseif would need the same, and
+the endif would need extra right braces depending on the
+number of elseifs.  Would be ok if the elseifs dispatched on
+the same var (ie, we skip the v arg for elseifs; want less
+generic name than _ADT_v also, or perhaps its safe, and we
+need to think about "else" following endif etc - check XXX):
+
+#define elseif_Branch(v0,v1) \
+} else if (((_ADTint)(_ADT_v)&7)==2) {\
+struct _ADT_Cord_int* v0=((struct
+_ADT_Cord_int_Branch*)((_ADTint)_ADT_v-2))->f0; \
+struct _ADT_Cord_int* v1=((struct
+_ADT_Cord_int_Branch*)((_ADTint)_ADT_v-2))->f1; 
+
+
+Looks nice!
+-----------------------------------------
+Should we have a while macro for some cases eg, when constructor has (a
+simgle) occurrence of data type recursively, (eg Cons):
+length(List l) {
+        int len = 0;
+	while_Cons(l, _h, t) {
+		l = t;
+		len++;
+	}
+	return len;
+}
+
+Would we need end_while?  May not be a bad idea anyway for consistency with
+switch and if.  Doesn't seem much use for Nil etc.  Maybe for mutually
+recursive types, eg, rtrees, where mutual recursion may not be obvious at
+time of processing.  A bit marginal, but whats the harm (just a bit more
+bloat)?
+
+Could potentially produce multiple .h files - basic functionality plus
+extra stuff.  If we don't need the extra stuff, don't include the file.
+-----------------------------------------
+intsets/bitsets representations:
+search: efficient representation sets of integers
+http://www.iis.uni-stuttgart.de/intset/
+IDDs http://www.di.ens.fr/~jv/HomePage/pdf/dichotomy09.pdf
+
+-----------------------------------------
+Polymorphism
+Define polymorphic types in traditional way.
+
+We can instantiate type variables with opaque types V1, V2, etc which have
+no cobnstructors or operations defined, so you can't do anything with
+them other than assign to the same type.  Traditional polymorphic code
+is well-typed iff such an instance is well-typed (instantiating distinct
+type variables to distinct opaque types).  So we have C functions which
+are essentially polymorphic and are typed using these special types.
+
+An instance of a polymorphic function can simply be the polymorphic
+function with appropriate casts and type checking (what looks like a call
+to the polymorphic function with a particular instance of the type is
+actually a macro with casts etc).  We need to declare which instances of
+each poymorphic function we will use, so these macros can be generated
+(this includes the functions to create data constructors, so we need to
+declare instances of types as well as functions).
+
+Could have generic names for some instances (eg with V1, V2, etc) to
+avoid some declarations, or we could have different names for opaque
+types, based on names of type variables in declarations.
+
+But we need, eg
+definition of List(T) polymorphic type
++ declaration of all instances used:
+List=List(V1) (may be implicit etc), List_Long=List(Long),
+ListList=List(List(Long)), ...
+
++ declaration of each polymorphic function and each instance used:
+List tail(List) instances
+	List_Long tail_Long(List_Long), ...
+List append(List *, List) instances
+	List_Long apend_Long(List_Long *, List_Long), ...
+...
+
+May be able to make things more concise, need to decide appropriate
+syntax.  First decide on internal representation for above details (need
+representation for C types including pointers, arrays, functions, etc).
+
+--------------------------------------
+
+Another useful primitive:
+new_Cons(consp, headp, tailp)
+allocates a new Cons, assigning prt to consp + ptrs to args to headp and
+tailp (should these be new vars or declared elsewhere - probably the
+latter).
+Cons(h, t) same as (new_Cons(tmp1, tmp2, tmp3), *tmp2=h, *tmp3=t, tmp1)
+given these temp vars are declared somewhere.
+
+--------------------------------------
+
+Possible C-like syntax for adts, based on struct and union
+(could use algebraic etc rather than adt):
+
+adt ints {
+	Cons(int, ints);
+	Nil;
+	};
+
+Like a struct definition + typedef to avoid having to add the struct
+keyword with the type name all over the place (an annoying thing in C).
+We want a single word for the type name because its expanded via a
+#define (though I guess we could have "adt ints" as well with
+#define adt /* nothing */
+- then it would look just like a struct-style definition, and maybe
+its not such a bad thing for the C program to make it clear where ADTs
+are used since its a language extension (if it was supported properly
+then the typedef would be fine).
+
+We could also easily add field names, eg:
+
+adt ints {
+	Cons(int head, ints tail);
+	Nil;
+	};
+
+Polymorphic version (need to have different names for constructors in
+ints and instances of this type):
+
+adt list(t) {
+	Cons(t, list(t));
+	Nil;
+	};
+
+Looks fine...
+
+Easy to interface to C builtin types + potentially pack things into a
+struct efficiently:
+
+adt char8s {
+	Cons(char[8], char8s);
+	Nil;
+	};
+ 
+ 
+///////////////////
+add some contents
+
+<ctype.h>;  
+_CRTIMP int __cdecl isalnum(int);  
+_CRTIMP int __cdecl isalpha(int);  
+_CRTIMP int __cdecl iscntrl(int);  
+_CRTIMP int __cdecl isdigit(int);
+_CRTIMP int __cdecl isgraph(int);  
+_CRTIMP int __cdecl islower(int);
+_CRTIMP int __cdecl isprint(int); 
+_CRTIMP int __cdecl ispunct(int);  
+_CRTIMP int __cdecl isspace(int);
+_CRTIMP int __cdecl isupper(int);
+_CRTIMP int __cdecl isxdigit(int);
+
+--------------------------------------
+extracting constructor num from v of type T
+
+
+    ( T_NUM_NONCONST>0 && v > T_NUM_CONST-1 ?     // 1.
+        ( T_NUM_NONCONST==1 ?                     // 2.
+            T_NUM_CONST
+        :
+            // tag = v&7,                         // 3.
+            ( T_NUM_NONCONST>8 && (v&7) == 7 ?    // 4.
+                *(Tstruct*)(v-(v&7))->ftag + T_NUM_CONST
+            :
+                (v&7) + T_NUM_CONST
+            )
+        )
+    :
+        v
+    )
+
+
+1. This is clearly false if T_NUM_NONCONST==0, so compiler should optimise
+things for us.  Also, assuming v is unsigned (type uintptr_t rather
+than intptr_t), if there is a single constant, we are testing for v>0,
+which is the same as v!=0, so hopefully the compiler will also do a good
+job with this comparison.
+
+2. Always optimised away, so if there is a single nonconst we avoid
+extracting the tag, which is zero.
+
+3. Need tag to be declared somewhere, eg whenever this code is used
+(unfortunately we can't put var allocation inside switch (...)), so we
+avoid using this var and assume common sub-expression is eliminated by
+compiler.
+
+4. This is clearly false if no sec. tags, so compiler should optimise
+things for us.
+
+
