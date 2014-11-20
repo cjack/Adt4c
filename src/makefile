@@ -4,13 +4,14 @@ LEX = parser.l
 YACC = parser.y
 YFLAG = -d
 OFLAG = -o
+CFLAG = -Wall
 ADT_SUPPORT = adtpp.c
 ADT_MASTER = adt_master
 SOURCE = parser.l parser.y adtpp.c $(ADT_MASTER).adt $(ADT_MASTER).h makefile
 
 all : lex.yy.c y.tab.c
 	cp $(ADT_MASTER).h adt_t.h
-	$(CC) lex.yy.c y.tab.c $(ADT_SUPPORT) $(OFLAG) $(EXECUTABLE)
+	$(CC) $(CFLAG) lex.yy.c y.tab.c $(ADT_SUPPORT) $(OFLAG) $(EXECUTABLE)
 	make clean
 
 lex.yy.c : $(LEX)

@@ -4,7 +4,8 @@
 
 #define TYPE_LENGTH 500
 #define LOW_BIT_USED 7
-
+#define WARNING_AVOID(val) \
+if(val); //handle unused value to avoid warnings
 
 //----------------------   Definition for functions  ---------------------------
 //Type definition for .h file
@@ -76,6 +77,7 @@ void field_if_rhs(stringlist_t arg_list, c_string Type, c_string Con, FILE* fp, 
 void field_if_args(stringlist_t arg_list, FILE* fp, int num){
 	int i = num;
 	if_nextlist(arg_list, a_val, a_next)
+		WARNING_AVOID(a_val)
 		fprintf(fp, ", v%d", i++);
 		field_if_args(a_next, fp, i);
 	end_if()
@@ -105,7 +107,9 @@ void field_case_args(stringlist_t arg_list, FILE* fp, int num){
 	int i = num;
 
 	if_nextlist(arg_list, a_val, a_next)
+		WARNING_AVOID(a_val)
 		if_string(a_val, a_str)
+			WARNING_AVOID(a_str)
 			if(i == 0){
 				fprintf(fp, "v%d", i++);
 			}
@@ -194,7 +198,6 @@ void free_prototype(c_string Type, FILE* fp){
 //char* Type, char* Con, char input_list[][TYPE_LENGTH], int c_num, int num, int Tag, FILE* fp, int fnum
 void hfile_generation(c_string Type, c_string Con, stringlist_t arg_list, FILE* fp, int Tag, int is_const, int cp, int np){
 
-	int i = 0;
 
 	// This if branch only address the non-const constructor and its
 	// number of args larger than 8 but not equal to 8
@@ -508,6 +511,7 @@ void mono_type_def_h_file(c_string Type, c_string Con, FILE *fp, int cp, int np,
 void field_malloc_eqs(stringlist_t arg_list, FILE* fp, int num){
 	int i = num;
 	if_nextlist(arg_list, a_val, a_next)
+		WARNING_AVOID(a_val)
 		fprintf(fp, "\n\tv->f%d=v%d; ", i, i);
 		i++;
 		field_malloc_eqs(a_next, fp, i);
@@ -584,7 +588,6 @@ void adt_main(char filename[], c_string Type, c_string Con, stringlist_t arg_lis
 
 	char path[] = "./";
 	char suffix[] = ".h";
-	char suffix_2[] = ".c";
 	char h_file_name[ARRAY_SIZE];
 
 	//definition for .h file name and path

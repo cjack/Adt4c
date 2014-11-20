@@ -1,3 +1,4 @@
+
 %{#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -13,7 +14,8 @@ extern FILE *yyin;
 #define CONTENT_SIZE 50000
 #define TYPE_LENGTH 500
 #define TYPE_NUM 1000
-
+#define WARNING_AVOID(val) \
+if(val); //handle unused value to avoid warnings
 
 extern void adt_main(char file_name[], c_string Type, c_string Con, stringlist_t arg_list, FILE* fp_h, int tag, int is_const, int cp, int np, int *is_init);
 
@@ -58,9 +60,8 @@ int collect_type_name(char filename[], char type_list[][TYPE_LENGTH]){
 	char indicator[TYPE_LENGTH], type_name[TYPE_LENGTH];
 	int wrong_position = 0;
 	char target[] = "data";
-
 	int p = 0;
-	while(fscanf(fp, "%s %s", &indicator, &type_name) != EOF){
+	while(fscanf(fp, "%s %s", indicator, type_name) != EOF){
 		if(strcmp(indicator, target) == 0 && wrong_position == 0){
 			//if indicater is "data", then type_name should be the type name
 			int l = strlen(type_name);
@@ -119,7 +120,6 @@ char *remove_file_suffix(char* mystr) {
 
 void initializaion_files(FILE* fp_h){
 	char content[CONTENT_SIZE];
-	char type_content[CONTENT_SIZE];
 	char h_file_include_content[] =
 	"#include <stdint.h>\n\
 #include <stdlib.h>\n\
@@ -216,7 +216,6 @@ ctrlist_t reverse_ctrlist(ctrlist_t input){
 c_string type_normalization(c_string input, c_string temp){
 	//Check if the type is within the prim_types.
 	//normalize the type when out of range of prim types.
-	int i = 0;
 	int NOT_PRIM_TPYE = check_in_array(type_list, type_list_length, input);
 
 	if(NOT_PRIM_TPYE == 0){
@@ -233,6 +232,7 @@ c_string type_normalization(c_string input, c_string temp){
 int is_const(ctr_t input){
 	if_ctr(input, c_val, c_arglist)
 		if_nextarg(c_arglist, c_arg, c_next)
+			if(c_arg && c_next && c_val); //handle unused value to avoid warnings
 			return 0;
 		end_if()
 
@@ -319,6 +319,7 @@ void print_decl(decl_t input){
 							fetch_arglist(c_arglist, p_arglist);
 							// For non-const
 							if_nextarg(c_arglist, al_head, al_tail)
+								if(al_head && al_tail); //handle unused value to avoid warnings
 								adt_main(file_name, d_str, c_str, reverse_stringlist(temp_arglist), fp_h, non_const_tag++, 0, *const_pointer, *non_const_pointer, init);
 							end_if()
 
@@ -348,6 +349,7 @@ void count_number_of_const_nonconst(arglist_t input, int *cp, int *np){
 	//if there is a number of arguments, the number of
 	//non-const add 1
 	if_nextarg(input, arg_val, arg_next)
+		WARNING_AVOID(arg_val && arg_next)
 		*np = *np + 1;
 	end_if()
 
@@ -500,7 +502,6 @@ int main(int argc, char **argv)
 }
 %}
 
-
 //------------------------------------------------------------------------------
 
 
@@ -509,13 +510,13 @@ int main(int argc, char **argv)
 
 //--------------------  Token Definition ---------------------------------------
 
-
 %union 					//redifine the global variable of yylval
 						// which used in the test.l file
 {
         int number;
         char *string;
 }
+
 
 %token <number> NUMBER
 %token <string> WORD
@@ -532,7 +533,6 @@ int main(int argc, char **argv)
 //-----------------------Parsing Structure Definition --------------------------
 
 %%
-
 commands:					//regards all strings as "commands" and each
 							//"commands"  contain a number of "command"
 	|
@@ -599,7 +599,6 @@ arguments:				//for recursion, each argument can be regards as "arg, "
 
 	WORD WORD WORD COMMA arguments
 	{
-		int temp_len = strlen($1) + strlen($2) + strlen($3);
 		char temp_str[TYPE_LENGTH];
 		char space[] = " ";
 		strcpy(temp_str, $1);
@@ -607,7 +606,6 @@ arguments:				//for recursion, each argument can be regards as "arg, "
 		strcat(temp_str, $2);
 		strcat(temp_str, space);
 		strcat(temp_str, $3);
-		// arg_temp = arg(string($1));
 		printf("Test %s\n", temp_str);
 		arg_temp = arg(string(temp_str));
 		a_list = nextarg(arg_temp, a_list);
@@ -615,14 +613,11 @@ arguments:				//for recursion, each argument can be regards as "arg, "
 	|
 	WORD WORD COMMA arguments
 	{
-		int temp_len = strlen($1) + strlen($2);
 		char temp_str[TYPE_LENGTH];
 		char space[] = " ";
 		strcpy(temp_str, $1);
 		strcat(temp_str, space);
 		strcat(temp_str, $2);
-		// arg_temp = arg(string($1));
-		printf("Test %s\n", temp_str);
 		arg_temp = arg(string(temp_str));
 		a_list = nextarg(arg_temp, a_list);
 	}
@@ -636,7 +631,6 @@ arguments:				//for recursion, each argument can be regards as "arg, "
 	|
 	WORD WORD WORD
 	{
-		int temp_len = strlen($1) + strlen($2) + strlen($3);
 		char temp_str[TYPE_LENGTH];
 		char space[] = " ";
 		strcpy(temp_str, $1);
@@ -644,20 +638,17 @@ arguments:				//for recursion, each argument can be regards as "arg, "
 		strcat(temp_str, $2);
 		strcat(temp_str, space);
 		strcat(temp_str, $3);
-		// arg_temp = arg(string($1));
 		arg_temp = arg(string(temp_str));
 		a_list = nextarg(arg_temp, a_list);
 	}
 	|
 	WORD WORD
 	{
-		int temp_len = strlen($1) + strlen($2);
 		char temp_str[TYPE_LENGTH];
 		char space[] = " ";
 		strcpy(temp_str, $1);
 		strcat(temp_str, space);
 		strcat(temp_str, $2);
-		// arg_temp = arg(string($1));
 		arg_temp = arg(string(temp_str));
 		a_list = nextarg(arg_temp, a_list);
 	}

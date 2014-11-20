@@ -1,12 +1,15 @@
 
+
 %{
+#define YY_NO_INPUT
 #include <stdio.h>
 #include "y.tab.h"
 %}
 
+%option nounput
 
 %%
-data			return DATA;			
+data			return DATA;
 type			return TYPE;
 [a-zA-Z_][a-zA-Z0-9_]*    yylval.string=strdup(yytext); return WORD;
 \(						return FBRACE;
