@@ -1,5 +1,11 @@
 Copyright (c) 2014 Yi Lin, Lee Naish and Peter Schachte
 
+Support for algebraic data types in C via macros (mostly) with minimal
+runtime overhead, compact data repersentation (tagged pointers) and
+type+other errors checked by built in checking done by C compiler (ie,
+we avoid implementing a parser for extende C + our own type checker etc,
+so the design is somewhat constrained).
+
 Initial design and prototype implementation by Lee Naish
 Initial C implementation by Yi Lin
 Additional supervision/contributions by Peter Schachte
