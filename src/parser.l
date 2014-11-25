@@ -20,4 +20,6 @@ type			return TYPE;
 ;                       return SEMICOLON;
 \n                      /* ignore EOL */;
 [ \t]+                  /* ignore whitespace */;
+\/\*.*\*\/              /* ignore original style C comments (like this) */
+\/\/.*\n                // ignore "end of line" C comments (like this)
 %%

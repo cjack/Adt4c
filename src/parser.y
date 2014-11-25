@@ -541,8 +541,12 @@ commands:					//regards all strings as "commands" and each
 
 
 command:
-	data_type_definition	//in the big picture, regards each date type
+	data_type_definition maybesemicolon	//in the big picture, regards each date type
 							//definition as a command
+	;
+
+maybesemicolon: // optional semicolon after closing brace of type definition
+	| SEMICOLON
 	;
 
 
