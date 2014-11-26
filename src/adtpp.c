@@ -3,6 +3,7 @@
 #include "adt_master.h"
 
 #define TYPE_LENGTH 500
+// XXX see comment in parser.y re hard-coding 7
 #define LOW_BIT_USED 7
 #define WARNING_AVOID(val) \
 if(val); //handle unused value to avoid warnings
@@ -198,6 +199,10 @@ void free_prototype(c_string Type, FILE* fp){
 //char* Type, char* Con, char input_list[][TYPE_LENGTH], int c_num, int num, int Tag, FILE* fp, int fnum
 void hfile_generation(c_string Type, c_string Con, stringlist_t arg_list, FILE* fp, int Tag, int is_const, int cp, int np){
 
+
+	// XXX this is very verbose - it can be cleaned up by generating
+	// a more complex macro and getting cpp/gcc to simplify it at
+	// compile time as we do in switches
 
 	// This if branch only address the non-const constructor and its
 	// number of args larger than 8 but not equal to 8
@@ -471,6 +476,8 @@ void def_of_constructor_num(c_string Type, c_string Con, FILE *fp, int cp, int n
 	fprintf(fp, "#define %s_T_NUM_CONST (%d) \n", Type, cp);
 	fprintf(fp, "#define %s_T_NUM_NONCONST (%d) \n", Type, np);
 
+	// XXX should define constructorNum macro so its optimised away when
+	// there is a single constructor in the type
 	fprintf(fp, "#define %s_constructorNum(v) \\\n", Type);
 	fprintf(fp, "(( %s_T_NUM_NONCONST>0 && v >= %s_T_NUM_CONST ?  \\\n", Type, Type);
 	fprintf(fp, " ( %s_T_NUM_NONCONST==1 ?  %s_T_NUM_CONST   : \\\n", Type, Type);
@@ -484,7 +491,9 @@ void mono_type_def_h_file(c_string Type, c_string Con, FILE *fp, int cp, int np,
 	fprintf(fp, "\n/***************************/\ntypedef struct _ADT_%s{} *%s;\n",Type, Type);
 	def_of_constructor_num(Type, Con, fp, cp, np);
 	if(is_enum == 1){
-		// if the data structure is an enum, no free function should be given
+		// XXX better if a free() function which does nothing is
+		// generated
+		// if the data structure is an enum, no free function is given
 		fprintf(fp, "\n#define switch_%s(v) \\\n{%s _%s_tchk, _ADT_v=(v);", Type, Type, Type);
 	}else{
 		free_prototype(Type, fp);
@@ -538,12 +547,12 @@ void function_generation(c_string Type, c_string Con, stringlist_t arg_list, FIL
 	}
 	else if(Tag >= LOW_BIT_USED && np > LOW_BIT_USED + 1){
 		//add extra space for second-tag
-		fprintf(fp, "{\n\t%s *v=(%s*)malloc(sizeof(%s));", STC, STC, STC);
+		fprintf(fp, "{\n\t%s *v=(%s*)ADT_MALLOC(sizeof(%s));", STC, STC, STC);
 		fprintf(fp, "\n\tv->ftag = %d; ", Tag);
 		field_malloc_eqs(arg_list, fp, 0);    // The subscript starts from 0
 		fprintf(fp, "\n\treturn (%s)(LOW_BIT_USED+(uintptr_t)v);\n}\n", Type);
 	}else{
-		fprintf(fp, "{\n\t%s *v=(%s*)malloc(sizeof(%s));", STC, STC, STC);
+		fprintf(fp, "{\n\t%s *v=(%s*)ADT_MALLOC(sizeof(%s));", STC, STC, STC);
 		field_malloc_eqs(arg_list, fp, 0);    // The subscript starts from 0
 		fprintf(fp, "\n\treturn (%s)(%d+(uintptr_t)v);\n}\n", Type, Tag);
 	}
@@ -560,9 +569,9 @@ void mono_type_def_function(c_string Type, FILE* fp, int is_const, int is_enum, 
 		// Only need to free the non-constant constructor
 		if(np == 1){
 			//if the number of non-const is exactly 1 then free the struct directly
-			fprintf(fp, "free((void*)((uintptr_t)v));");
+			fprintf(fp, "ADT_FREE((void*)((uintptr_t)v));");
 		}else{
-			fprintf(fp, "free((void*)((uintptr_t)v&~LOW_BIT_USED));");
+			fprintf(fp, "ADT_FREE((void*)((uintptr_t)v&~LOW_BIT_USED));");
 		}
 		// align space for presentation
 		fprintf(fp, "\n\t}\n}\n\n");

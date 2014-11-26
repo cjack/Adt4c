@@ -128,7 +128,19 @@ typedef char *c_string;\n\
 #define default() break;}} default: {{\n\
 #define else() } else {\n\
 #define end_if() }}\n\
-#define LOW_BIT_USED 7";
+#ifndef ADT_MALLOC\n\
+#define ADT_MALLOC(s) malloc(s)\n\
+#endif\n\
+#ifndef ADT_FREE\n\
+#define ADT_FREE(s) free(s)\n\
+#endif\n\
+#ifndef LOW_BIT_USED\n\
+#define LOW_BIT_USED 7\n\
+#endif";
+// XXX LOW_BIT_USED should depend on architecture/malloc
+// there is some code in the old repo to compute it, which probably
+// should be used to generate lowbits.h which this code includes
+// rather than hard-coding 7 above
 
 //define the file name to be generated
 
