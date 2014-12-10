@@ -1,0 +1,27 @@
+data int_list{
+	nil();
+	next_list(int, int_list);
+}
+
+data tree{
+     leaf();
+     node(int, tree, tree);
+}
+
+data Test{
+     const_1();
+     const_2();
+     const_3();
+     const_4();
+     non_const_1(int, char, long, double);
+     non_const_2(int, char, long);
+     non_const_3(int, char);
+     non_const_4(int);
+     non_const_5(int, char, long, double);
+     non_const_6(int);
+     non_const_7(int);
+     non_const_8(int);
+     non_const_9(int);
+}
+
+
