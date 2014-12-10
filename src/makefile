@@ -4,7 +4,9 @@
 
 EXECUTABLE = adtpp
 ADTPP = ./$(EXECUTABLE)
-VERSION = Ver1.141210
+# Generate VERSION line with: date +'VERSION = 1.%y%m%d'
+# or in vim: :/^VERSION /!date +'VERSION = 1.\%y\%m\%d'
+VERSION = 1.141210
 CC = gcc
 LEX = parser.l
 YACC = parser.y
@@ -14,11 +16,11 @@ CFLAG = -Wall -Wformat
 ADT_SUPPORT = adtpp.c
 # to make adtpp we need adt_t.h, which is generated from adt_t.adt
 # by adtpp.  To avoid the cyclic dependency and do some basic
-# testing we provide a master version of adt_t.h
+# testing we provide a master version of adt_t.h.
 ADT_MASTER = adt_master
 SOURCE = parser.l parser.y adtpp.c $(ADT_MASTER).adt $(ADT_MASTER).h makefile ../doc/Documentation.pdf
 
-# the adtpp tool takes a foo.adt file and generates a foo.h file
+# adtpp takes a foo.adt file and generates a foo.h file
 # This generic rule is used here for testing and can be copied
 # to user-defined makefiles for convenience
 %.h : %.adt
@@ -26,7 +28,7 @@ SOURCE = parser.l parser.y adtpp.c $(ADT_MASTER).adt $(ADT_MASTER).h makefile ..
 
 $(EXECUTABLE) : lex.yy.c y.tab.c $(ADT_MASTER).h
 	cp $(ADT_MASTER).h adt_t.h
-	$(CC) $(CFLAG) lex.yy.c y.tab.c $(ADT_SUPPORT) $(OFLAG) $(EXECUTABLE)
+	$(CC) $(CFLAG) -DADTPP_VERSION=\"$(VERSION)\" lex.yy.c y.tab.c $(ADT_SUPPORT) $(OFLAG) $(EXECUTABLE)
 	make clean
 
 lex.yy.c : $(LEX)
