@@ -5,7 +5,15 @@ typedef char *c_string;
 #define default() break;}} default: {{
 #define else() } else {
 #define end_if() }}
+#ifndef ADT_MALLOC
+#define ADT_MALLOC(s) malloc(s)
+#endif
+#ifndef ADT_FREE
+#define ADT_FREE(s) free(s)
+#endif
+#ifndef LOW_BIT_USED
 #define LOW_BIT_USED 7
+#endif
 /***************************/
 typedef struct _ADT_string_t{} *string_t;
 #define string_t_T_NUM_CONST (0) 
@@ -27,7 +35,7 @@ switch(t) {{{
 /******************************************************************************/
 static __inline void free_string_t(string_t v){
 	if ((uintptr_t)(v) >= 0){
-		free((void*)((uintptr_t)v));
+		ADT_FREE((void*)((uintptr_t)v));
 	}
 }
 
@@ -51,7 +59,7 @@ break;}} case 0: {{string_t _SW_tchk=_string_t_tchk;}{char _string_t_tchk; \
 c_string *v0=&((struct _ADT_string_t_string*)((uintptr_t)_ADT_v-0))->f0; 
 
 static __inline string_t string(c_string v0){
-	struct _ADT_string_t_string *v=(struct _ADT_string_t_string*)malloc(sizeof(struct _ADT_string_t_string));
+	struct _ADT_string_t_string *v=(struct _ADT_string_t_string*)ADT_MALLOC(sizeof(struct _ADT_string_t_string));
 	v->f0=v0; 
 	return (string_t)(0+(uintptr_t)v);
 }
@@ -77,7 +85,7 @@ switch(t) {{{
 /******************************************************************************/
 static __inline void free_stringlist_t(stringlist_t v){
 	if ((uintptr_t)(v) >= 1){
-		free((void*)((uintptr_t)v));
+		ADT_FREE((void*)((uintptr_t)v));
 	}
 }
 
@@ -107,7 +115,7 @@ struct _ADT_string_t* *v0=&((struct _ADT_stringlist_t_nextlist*)((uintptr_t)_ADT
 struct _ADT_stringlist_t* *v1=&((struct _ADT_stringlist_t_nextlist*)((uintptr_t)_ADT_v-0))->f1; 
 
 static __inline stringlist_t nextlist(struct _ADT_string_t* v0, struct _ADT_stringlist_t* v1){
-	struct _ADT_stringlist_t_nextlist *v=(struct _ADT_stringlist_t_nextlist*)malloc(sizeof(struct _ADT_stringlist_t_nextlist));
+	struct _ADT_stringlist_t_nextlist *v=(struct _ADT_stringlist_t_nextlist*)ADT_MALLOC(sizeof(struct _ADT_stringlist_t_nextlist));
 	v->f0=v0; 
 	v->f1=v1; 
 	return (stringlist_t)(0+(uintptr_t)v);
@@ -151,7 +159,7 @@ switch(t) {{{
 /******************************************************************************/
 static __inline void free_arg_t(arg_t v){
 	if ((uintptr_t)(v) >= 0){
-		free((void*)((uintptr_t)v));
+		ADT_FREE((void*)((uintptr_t)v));
 	}
 }
 
@@ -175,7 +183,7 @@ break;}} case 0: {{arg_t _SW_tchk=_arg_t_tchk;}{char _arg_t_tchk; \
 struct _ADT_string_t* *v0=&((struct _ADT_arg_t_arg*)((uintptr_t)_ADT_v-0))->f0; 
 
 static __inline arg_t arg(struct _ADT_string_t* v0){
-	struct _ADT_arg_t_arg *v=(struct _ADT_arg_t_arg*)malloc(sizeof(struct _ADT_arg_t_arg));
+	struct _ADT_arg_t_arg *v=(struct _ADT_arg_t_arg*)ADT_MALLOC(sizeof(struct _ADT_arg_t_arg));
 	v->f0=v0; 
 	return (arg_t)(0+(uintptr_t)v);
 }
@@ -201,7 +209,7 @@ switch(t) {{{
 /******************************************************************************/
 static __inline void free_arglist_t(arglist_t v){
 	if ((uintptr_t)(v) >= 1){
-		free((void*)((uintptr_t)v));
+		ADT_FREE((void*)((uintptr_t)v));
 	}
 }
 
@@ -231,7 +239,7 @@ struct _ADT_arg_t* *v0=&((struct _ADT_arglist_t_nextarg*)((uintptr_t)_ADT_v-0))-
 struct _ADT_arglist_t* *v1=&((struct _ADT_arglist_t_nextarg*)((uintptr_t)_ADT_v-0))->f1; 
 
 static __inline arglist_t nextarg(struct _ADT_arg_t* v0, struct _ADT_arglist_t* v1){
-	struct _ADT_arglist_t_nextarg *v=(struct _ADT_arglist_t_nextarg*)malloc(sizeof(struct _ADT_arglist_t_nextarg));
+	struct _ADT_arglist_t_nextarg *v=(struct _ADT_arglist_t_nextarg*)ADT_MALLOC(sizeof(struct _ADT_arglist_t_nextarg));
 	v->f0=v0; 
 	v->f1=v1; 
 	return (arglist_t)(0+(uintptr_t)v);
@@ -275,7 +283,7 @@ switch(t) {{{
 /******************************************************************************/
 static __inline void free_ctr_t(ctr_t v){
 	if ((uintptr_t)(v) >= 0){
-		free((void*)((uintptr_t)v));
+		ADT_FREE((void*)((uintptr_t)v));
 	}
 }
 
@@ -305,7 +313,7 @@ struct _ADT_string_t* *v0=&((struct _ADT_ctr_t_ctr*)((uintptr_t)_ADT_v-0))->f0; 
 struct _ADT_arglist_t* *v1=&((struct _ADT_ctr_t_ctr*)((uintptr_t)_ADT_v-0))->f1; 
 
 static __inline ctr_t ctr(struct _ADT_string_t* v0, struct _ADT_arglist_t* v1){
-	struct _ADT_ctr_t_ctr *v=(struct _ADT_ctr_t_ctr*)malloc(sizeof(struct _ADT_ctr_t_ctr));
+	struct _ADT_ctr_t_ctr *v=(struct _ADT_ctr_t_ctr*)ADT_MALLOC(sizeof(struct _ADT_ctr_t_ctr));
 	v->f0=v0; 
 	v->f1=v1; 
 	return (ctr_t)(0+(uintptr_t)v);
@@ -332,7 +340,7 @@ switch(t) {{{
 /******************************************************************************/
 static __inline void free_ctrlist_t(ctrlist_t v){
 	if ((uintptr_t)(v) >= 1){
-		free((void*)((uintptr_t)v));
+		ADT_FREE((void*)((uintptr_t)v));
 	}
 }
 
@@ -362,7 +370,7 @@ struct _ADT_ctr_t* *v0=&((struct _ADT_ctrlist_t_nextctr*)((uintptr_t)_ADT_v-0))-
 struct _ADT_ctrlist_t* *v1=&((struct _ADT_ctrlist_t_nextctr*)((uintptr_t)_ADT_v-0))->f1; 
 
 static __inline ctrlist_t nextctr(struct _ADT_ctr_t* v0, struct _ADT_ctrlist_t* v1){
-	struct _ADT_ctrlist_t_nextctr *v=(struct _ADT_ctrlist_t_nextctr*)malloc(sizeof(struct _ADT_ctrlist_t_nextctr));
+	struct _ADT_ctrlist_t_nextctr *v=(struct _ADT_ctrlist_t_nextctr*)ADT_MALLOC(sizeof(struct _ADT_ctrlist_t_nextctr));
 	v->f0=v0; 
 	v->f1=v1; 
 	return (ctrlist_t)(0+(uintptr_t)v);
@@ -406,7 +414,7 @@ switch(t) {{{
 /******************************************************************************/
 static __inline void free_decl_t(decl_t v){
 	if ((uintptr_t)(v) >= 0){
-		free((void*)((uintptr_t)v));
+		ADT_FREE((void*)((uintptr_t)v));
 	}
 }
 
@@ -436,7 +444,7 @@ struct _ADT_string_t* *v0=&((struct _ADT_decl_t_decl*)((uintptr_t)_ADT_v-0))->f0
 struct _ADT_ctrlist_t* *v1=&((struct _ADT_decl_t_decl*)((uintptr_t)_ADT_v-0))->f1; 
 
 static __inline decl_t decl(struct _ADT_string_t* v0, struct _ADT_ctrlist_t* v1){
-	struct _ADT_decl_t_decl *v=(struct _ADT_decl_t_decl*)malloc(sizeof(struct _ADT_decl_t_decl));
+	struct _ADT_decl_t_decl *v=(struct _ADT_decl_t_decl*)ADT_MALLOC(sizeof(struct _ADT_decl_t_decl));
 	v->f0=v0; 
 	v->f1=v1; 
 	return (decl_t)(0+(uintptr_t)v);
@@ -463,7 +471,7 @@ switch(t) {{{
 /******************************************************************************/
 static __inline void free_decllist_t(decllist_t v){
 	if ((uintptr_t)(v) >= 1){
-		free((void*)((uintptr_t)v));
+		ADT_FREE((void*)((uintptr_t)v));
 	}
 }
 
@@ -493,7 +501,7 @@ struct _ADT_decl_t* *v0=&((struct _ADT_decllist_t_nextdecl*)((uintptr_t)_ADT_v-0
 struct _ADT_decllist_t* *v1=&((struct _ADT_decllist_t_nextdecl*)((uintptr_t)_ADT_v-0))->f1; 
 
 static __inline decllist_t nextdecl(struct _ADT_decl_t* v0, struct _ADT_decllist_t* v1){
-	struct _ADT_decllist_t_nextdecl *v=(struct _ADT_decllist_t_nextdecl*)malloc(sizeof(struct _ADT_decllist_t_nextdecl));
+	struct _ADT_decllist_t_nextdecl *v=(struct _ADT_decllist_t_nextdecl*)ADT_MALLOC(sizeof(struct _ADT_decllist_t_nextdecl));
 	v->f0=v0; 
 	v->f1=v1; 
 	return (decllist_t)(0+(uintptr_t)v);
