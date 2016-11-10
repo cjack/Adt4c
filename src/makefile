@@ -29,7 +29,6 @@ SOURCE = parser.l parser.y adtpp.c $(ADT_MASTER).adt $(ADT_MASTER).h makefile ..
 $(EXECUTABLE) : lex.yy.c y.tab.c $(ADT_MASTER).h
 	cp $(ADT_MASTER).h adt_t.h
 	$(CC) $(CFLAG) -DADTPP_VERSION=\"$(VERSION)\" lex.yy.c y.tab.c $(ADT_SUPPORT) $(OFLAG) $(EXECUTABLE)
-	make clean
 
 lex.yy.c : $(LEX)
 	flex $(LEX)
