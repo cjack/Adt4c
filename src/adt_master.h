@@ -29,8 +29,8 @@ typedef struct _ADT_string_t{} *string_t;
 static __inline void free_string_t(string_t v);
 #define switch_string_t(v) \
 {string_t _string_t_tchk, _ADT_v=(v); \
-int t = string_t_constructorNum((uintptr_t)(_ADT_v)); \
-switch(t) {{{
+int _ADT_t = string_t_constructorNum((uintptr_t)(_ADT_v)); \
+switch(_ADT_t) {{{
 
 
 /******************************************************************************/
@@ -79,8 +79,8 @@ typedef struct _ADT_stringlist_t{} *stringlist_t;
 static __inline void free_stringlist_t(stringlist_t v);
 #define switch_stringlist_t(v) \
 {stringlist_t _stringlist_t_tchk, _ADT_v=(v); \
-int t = stringlist_t_constructorNum((uintptr_t)(_ADT_v)); \
-switch(t) {{{
+int _ADT_t = stringlist_t_constructorNum((uintptr_t)(_ADT_v)); \
+switch(_ADT_t) {{{
 
 
 /******************************************************************************/
@@ -153,8 +153,8 @@ typedef struct _ADT_arg_t{} *arg_t;
 static __inline void free_arg_t(arg_t v);
 #define switch_arg_t(v) \
 {arg_t _arg_t_tchk, _ADT_v=(v); \
-int t = arg_t_constructorNum((uintptr_t)(_ADT_v)); \
-switch(t) {{{
+int _ADT_t = arg_t_constructorNum((uintptr_t)(_ADT_v)); \
+switch(_ADT_t) {{{
 
 
 /******************************************************************************/
@@ -203,8 +203,8 @@ typedef struct _ADT_arglist_t{} *arglist_t;
 static __inline void free_arglist_t(arglist_t v);
 #define switch_arglist_t(v) \
 {arglist_t _arglist_t_tchk, _ADT_v=(v); \
-int t = arglist_t_constructorNum((uintptr_t)(_ADT_v)); \
-switch(t) {{{
+int _ADT_t = arglist_t_constructorNum((uintptr_t)(_ADT_v)); \
+switch(_ADT_t) {{{
 
 
 /******************************************************************************/
@@ -277,8 +277,8 @@ typedef struct _ADT_ctr_t{} *ctr_t;
 static __inline void free_ctr_t(ctr_t v);
 #define switch_ctr_t(v) \
 {ctr_t _ctr_t_tchk, _ADT_v=(v); \
-int t = ctr_t_constructorNum((uintptr_t)(_ADT_v)); \
-switch(t) {{{
+int _ADT_t = ctr_t_constructorNum((uintptr_t)(_ADT_v)); \
+switch(_ADT_t) {{{
 
 
 /******************************************************************************/
@@ -334,8 +334,8 @@ typedef struct _ADT_ctrlist_t{} *ctrlist_t;
 static __inline void free_ctrlist_t(ctrlist_t v);
 #define switch_ctrlist_t(v) \
 {ctrlist_t _ctrlist_t_tchk, _ADT_v=(v); \
-int t = ctrlist_t_constructorNum((uintptr_t)(_ADT_v)); \
-switch(t) {{{
+int _ADT_t = ctrlist_t_constructorNum((uintptr_t)(_ADT_v)); \
+switch(_ADT_t) {{{
 
 
 /******************************************************************************/
@@ -408,8 +408,8 @@ typedef struct _ADT_decl_t{} *decl_t;
 static __inline void free_decl_t(decl_t v);
 #define switch_decl_t(v) \
 {decl_t _decl_t_tchk, _ADT_v=(v); \
-int t = decl_t_constructorNum((uintptr_t)(_ADT_v)); \
-switch(t) {{{
+int _ADT_t = decl_t_constructorNum((uintptr_t)(_ADT_v)); \
+switch(_ADT_t) {{{
 
 
 /******************************************************************************/
@@ -465,8 +465,8 @@ typedef struct _ADT_decllist_t{} *decllist_t;
 static __inline void free_decllist_t(decllist_t v);
 #define switch_decllist_t(v) \
 {decllist_t _decllist_t_tchk, _ADT_v=(v); \
-int t = decllist_t_constructorNum((uintptr_t)(_ADT_v)); \
-switch(t) {{{
+int _ADT_t = decllist_t_constructorNum((uintptr_t)(_ADT_v)); \
+switch(_ADT_t) {{{
 
 
 /******************************************************************************/

@@ -500,8 +500,8 @@ void mono_type_def_h_file(c_string Type, c_string Con, FILE *fp, int cp, int np,
 		fprintf(fp, ";\n#define switch_%s(v) \\\n{%s _%s_tchk, _ADT_v=(v);", Type, Type, Type);
 	}
 
-	fprintf(fp, " \\\nint t = %s_constructorNum((uintptr_t)(_ADT_v));", Type);
-	fprintf(fp, " \\\nswitch(t) {{{\n");
+	fprintf(fp, " \\\nint _ADT_t = %s_constructorNum((uintptr_t)(_ADT_v));", Type);
+	fprintf(fp, " \\\nswitch(_ADT_t) {{{\n");
 
 
 }
